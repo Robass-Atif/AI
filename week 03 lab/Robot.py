@@ -1,5 +1,5 @@
 from Graph import Graph
-from Searchalgo import BestFirstSearch,DepthFirstSearch,UniformCostSearch
+from Searchalgo import BestFirstSearch,DepthFirstSearch,UniformCostSearch,IterativeDeepeningSearch
 
 class RobotProblem:
     def __init__(self, initial_state, goal_state,grid):
@@ -57,8 +57,16 @@ problem = RobotProblem((0, 0), (3, 3),grid)
 def priority_function(state, cost):
     return cost
 bfs=BestFirstSearch(problem,priority_function)
+print("Best First Search")
 print(bfs.search())
 dfs=DepthFirstSearch(problem)
+print("Depth First Search")
 print(dfs.search())
 ucs=UniformCostSearch(problem)
+print("Uniform Cost Search")
 print(ucs.search())
+
+ids=IterativeDeepeningSearch(problem)
+print("Iterative Deepening Search")
+print(ids.search())
+
