@@ -1,168 +1,148 @@
-class MDP:
-    def __init__(self, grid, start, end, slip_prob):
-        self.grid = grid
-        self.start = start
-        self.end = end
-        self.slip_prob = slip_prob
-        self.states = [(i, j) for i in range(len(grid)) for j in range(len(grid[0]))]
-        self.actions_list = ['up', 'down', 'left', 'right']
+class MDPGrid:
+    def __init__(self):
+        self.grid = [
+            [5, 0, 0, 0],
+            [0, -50, 0, 70],
+            [0, -50, 0, 0],
+            [0, 0, 0, 0]
+        ]
+        self.size = 4 
+        self.start_state_pos = (1, 0)  
+        self.end_states = [(1, 3), (1, 1), (2, 1)]  
 
     def start_state(self):
-        return self.start
+        return self.start_state_pos
 
-    def is_end(self, state):
-        return state == self.end
-
-    def discount(self):
-        return 1  # No discount for this problem
-
-    def next_state(self, state, action):
-        x, y = state
-        if action == 'up':
-            return (x - 1, y) if x > 0 else state
-        elif action == 'down':
-            return (x + 1, y) if x < len(self.grid) - 1 else state
-        elif action == 'left':
-            return (x, y - 1) if y > 0 else state
-        elif action == 'right':
-            return (x, y + 1) if y < len(self.grid[0]) - 1 else state
-        else:
-            return state
+    def is_goal(self, state):
+        return state in self.end_states
 
     def actions(self, state):
-        x, y = state
         actions = []
-        if x > 0 and self.grid[x][y]!='X' :
-            actions.append('up')
-        if x < len(self.grid) - 1 and self.grid[x][y]!='X':
-            actions.append('down')
-        if y > 0 and self.grid[x][y]!='X':
-            actions.append('left')
-        if y < len(self.grid[0]) - 1 and self.grid[x][y]!='X':
-            actions.append('right')
+        x, y = state
+        if x > 0:
+            actions.append('UP')
+        if x < self.size - 1:
+            actions.append('DOWN')
+        if y > 0:
+            actions.append('LEFT')
+        if y < self.size - 1:
+            actions.append('RIGHT')
         return actions
 
-    def transition(self, state, action, next_state):
-        x, y = next_state
-        if self.grid[x][y] == 'X':  # Volcano
-            return self.slip_prob
-        else:
-            return 1 - self.slip_prob
-
-    def reward(self, state):
+    def get_next_state(self, state, action):
         x, y = state
-        if self.grid[x][y] == '20':  # Goal reward
-            return 20
-        elif self.grid[x][y] == 'X':  # Volcano penalty
-            return -50
+        if action == 'UP':
+            return (x - 1, y)
+        elif action == 'DOWN':
+            return (x + 1, y)
+        elif action == 'LEFT':
+            return (x, y - 1)
+        elif action == 'RIGHT':
+            return (x, y + 1)
+
+    def transition_prob(self, state, action, next_state):
+        negative_states = [(1, 1), (2, 1)]
+        if next_state in negative_states:
+            return 0
         else:
-            return 0  # Neutral reward
+            return 1
 
-    def value_iteration(self, num_iters=10):
-        values = {(row, col): 0 for row in range(len(self.grid)) for col in range(len(self.grid[0]))}
-        
-        for _ in range(num_iters):
-            new_values = values.copy()
-            
-            for state in self.states:
-                if self.is_end(state):
+    def reward(self, state, action, next_state):
+        x, y = next_state
+        return self.grid[x][y]
+
+# Move the policy evaluation function outside the class
+def policy_evaluation(mdp, policy, discount=1, epsilon=0.01):
+    value = [[0 for _ in range(mdp.size)] for _ in range(mdp.size)]
+    delta = float('inf')
+    
+    while delta > epsilon:
+        delta = 0
+        for x in range(mdp.size):
+            for y in range(mdp.size):
+                state = (x, y)
+                if mdp.is_goal(state):
                     continue
+                v = value[x][y]
+                action = policy[state]
+                total_value = 0
+                next_state = mdp.get_next_state(state, action)
+                prob = mdp.transition_prob(state, action, next_state)
+                reward = mdp.reward(state, action, next_state)
+                total_value += prob * (reward + discount * value[next_state[0]][next_state[1]])
+                value[x][y] = total_value
+                delta = max(delta, abs(v - value[x][y]))
+    
+    return value
+
+# Move the value iteration function outside the class
+def value_iteration(mdp, discount=0.9, epsilon=0.01):
+    value = [[0 for _ in range(mdp.size)] for _ in range(mdp.size)]
+    policy = {}
+    delta = float('inf')
+    
+    while delta > epsilon:
+        delta = 0
+        for x in range(mdp.size):
+            for y in range(mdp.size):
+                state = (x, y)
+                if mdp.is_goal(state):
+                    continue
+                v = value[x][y]
                 
-                action_values = []
-                
-                for action in self.actions(state):
-                    next_state = self.next_state(state, action)
-                    transition_prob = self.transition(state, action, next_state)
-                    reward = self.reward(next_state)
-                    
-                    value = transition_prob * (reward + self.discount() * values[next_state])
-                    action_values.append(value)
-                
-                new_values[state] = max(action_values) if action_values else 0
-            
-            values = new_values
+                best_action_value = float('-inf')
+                best_action = None
+                for action in mdp.actions(state):
+                    total_value = 0
+                    next_state = mdp.get_next_state(state, action)
+                    prob = mdp.transition_prob(state, action, next_state)
+                    reward = mdp.reward(state, action, next_state)
+                    total_value += prob * (reward + discount * value[next_state[0]][next_state[1]])
+                    if total_value > best_action_value:
+                        best_action_value = total_value
+                        best_action = action
+                value[x][y] = best_action_value
+                policy[state] = best_action
+                delta = max(delta, abs(v - value[x][y]))
+    
+    return policy, value
+
+def find_path(grid, policy):
+    state = grid.start_state()
+    path = []  
+    
+    while not grid.is_goal(state):
+        action = policy.get(state, None)  
+        if action is None:
+            print("No action available from state:", state)
+            return
         
-        return values
+        next_state = grid.get_next_state(state, action) 
+        path.append((state, action))  
+        state = next_state  
+    
+    path.append((state, "Goal")) 
+    print("Path from start to goal:", path)
 
-    def best_policy(self):
-        # Find the best policy based on the value function
-        policy = {}
-        values = self.value_iteration()
+# Instantiate the MDPGrid
+mdp_grid = MDPGrid()
 
-        for state in self.states:
-            if self.is_end(state):
-                continue
+# Perform value iteration using the external function
+policy, value = value_iteration(mdp_grid)
 
-            best_action = None
-            best_value = float('-inf')
+# Print the value function
+print("Value Function:")
+for row in value:
+    print(row)
 
-            for action in self.actions(state):
-                next_state = self.next_state(state, action)
-                transition_prob = self.transition(state, action, next_state)
-                reward = self.reward(next_state)
+# Print the policy
+print("\nPolicy:")
+for row in range(mdp_grid.size):
+    for col in range(mdp_grid.size):
+        state = (row, col)
+        action = policy.get(state, ' ')
+        print(action, end='\t')
+    print()
 
-                value = transition_prob * (reward + self.discount() * values[next_state])
-
-                if value > best_value:
-                    best_value = value
-                    best_action = action
-
-            policy[state] = best_action
-
-        return policy
-
-    def print_grid(self, values, policy):
-        action_symbols = {'up': '↑', 'down': '↓', 'left': '←', 'right': '→'}
-        
-        print("Grid Values and Best Actions:")
-        
-        # Print the grid values and actions
-        for row in range(len(self.grid)):
-            for col in range(len(self.grid[0])):
-                state = (row, col)
-                value = round(values[state], 1)
-                action = policy.get(state, ' ')
-                symbol = action_symbols.get(action, ' ')
-                print(f"{value} {symbol}", end="\t")
-            print()
-        
-        # Print the path from start to end
-        path = self.get_path(self.start, self.end, policy)
-        print("Path from start to end:", path)
-
-    def get_path(self, start, end, policy):
-        path = []
-        current_state = start
-
-        while current_state != end:
-            action = policy.get(current_state)
-            if action is None:
-                break  # If no action is found, exit the loop
-
-            path.append((current_state, action))  # Append current state and action to path
-            # Move to the next state based on the action
-            current_state = self.next_state(current_state, action)
-
-        return path
-            
-       
-
-# Example Grid
-grid = [[' ', ' ', 'X', ' ' ],
-        [' ', ' ', 'X', ' '],
-        [' ', 'X', '20', 'X'],
-        [' ', ' ', '', ' ']]
-       
-
-start = (0, 0)
-end = (2, 2)
-
-# Instantiate the MDP
-game = MDP(grid, start, end, 1)
-
-# Run value iteration and print the value function and policy
-value_function = game.value_iteration()
-policy = game.best_policy()
-
-# Print the grid with values and actions
-game.print_grid(value_function, policy)
+# Find the path using the computed policy
+find_path(mdp_grid, policy)
