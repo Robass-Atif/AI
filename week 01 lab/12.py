@@ -1,5 +1,3 @@
-
-
 def depth(tree):
     
     if not isinstance(tree, tuple):

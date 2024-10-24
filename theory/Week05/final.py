@@ -150,15 +150,15 @@ class MDP:
 # Example Grid
 grid = [[' ', ' ', 'X', ' ' ],
         [' ', ' ', 'X', ' '],
-        [' ', 'X', '20', 'X'],
-        [' ', ' ', '', ' ']]
+        [' ', ' ', '20', 'X'],
+        [' ', ' ', ' ', ' ']]
        
 
 start = (0, 0)
 end = (2, 2)
 
 # Instantiate the MDP
-game = MDP(grid, start, end, 1.2)
+game = MDP(grid, start, end, 0.1)
 
 # Run value iteration and print the value function and policy
 value_function = game.value_iteration()
