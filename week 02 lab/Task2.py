@@ -1,29 +1,16 @@
-
-# DFS ALGORITHM OF GRAPH
 def dfs(graph, start_vertex):
-    # list of visted nodes
+    # List of visited nodes
     visited = []
 
-    # stack to store vertex of graph
+    # Stack to store vertices of the graph
     stack = [start_vertex]
 
     while stack:
-
         vertex = stack.pop()
-        # check either vertex present in list or not
+        # Check if vertex has already been visited
         if vertex not in visited:
             visited.append(vertex)
-            # push vertex neighbour in stack
+            # Push vertex neighbors onto the stack
             stack.extend(graph.get_neighbors(vertex))
 
-
     return visited
-
-
-
-
-
-    
-
-
-   

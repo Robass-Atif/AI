@@ -15,7 +15,7 @@ class Graph:
             if vertex[1] == '1':
                 self.is_directed = True
 
-            vertexlist = f.readline().strip().split() 
+            vertexlist = f.readline().strip().split()
             for i in range(len(vertexlist)):
                 self.vertices.append(vertexlist[i])
 
@@ -67,9 +67,9 @@ def main():
     filename = input("Enter the filename: ")
     graph = Graph()
     graph.read_graph_from_file(filename)
-    print("Number of vertices: ", graph.get_vertex_count())
-    print("Number of edges: ", graph.get_edge_count())
-    print("Is the graph directed: ", graph.is_graph_directed())
+    print("Number of vertices:", graph.get_vertex_count())
+    print("Number of edges:", graph.get_edge_count())
+    print("Is the graph directed:", graph.is_graph_directed())
 
     while True:
         vertex = input("Enter the vertex to get neighbors: ")
@@ -79,7 +79,7 @@ def main():
             print("Vertex not found in the graph")
         
         choice = input("Do you want to continue? (Y/N): ")
-        if choice.upper() == 'N':  
+        if choice.upper() == 'N':
             break
 
 # Call main()
