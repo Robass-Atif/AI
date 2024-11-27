@@ -1,0 +1,23 @@
+1. Data Cleaning
+Fixing errors and removing bad data 
+2.Handling Missing Values
+Filling in gaps in the data with averages 
+3.Removing Outliers
+removing value which is confuse th model
+4.Data Transformation
+transform data so that it can easily analyze
+5. Feature Scaling
+adjust the rnge of values
+6. Normalization
+convert data if specific range mostly between 0 and 1
+7. Standardization
+change data such that its average is 0 and standard deviation is 1
+8. Encoding Categorical Data
+convert non-numerical data into numerical data
+9. Binning
+grouping continues data for analyze easily
+10. Dimensionality Reduction
+reduce number of feature which s imp.
+11. Feature Selection
+
+ 
